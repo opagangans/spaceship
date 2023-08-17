@@ -109,10 +109,11 @@ bullets = []
 # Modify the fire_bullet function to create a new bullet object and add it to the list
 def fire_bullet():
     global bullet_state
-    bullet_state = "fire"
-    x = player.xcor()
-    y = player.ycor() + 10
-    bullet = turtle.Turtle()
+    if bullet_state == "ready":
+        bullet_state = "fire"
+        x = player.xcor()
+        y = player.ycor() + 10
+        bullet = turtle.Turtle()
     bullet.speed(0)
     bullet.shape("triangle")
     bullet.color("white")
@@ -166,13 +167,14 @@ for bullet in bullets:
             bullet_state = "ready"
 
         # Check for collisions between the player's bullets and the alien ships
-        for alien in aliens:
-            if bullet.distance(alien) < 20:
-                bullet.hideturtle()
-                bullets.remove(bullet)
-                bullet_state = "ready"
-                alien.hideturtle()
-                aliens.remove(alien)
+        for bullet in bullets:
+            for alien in aliens:
+                if bullet.distance(alien) < 20:
+                    bullet.hideturtle()
+                    bullets.remove(bullet)
+                    bullet_state = "ready"
+                    alien.hideturtle()
+                    aliens.remove(alien)
 
 player_bullets = []
 
@@ -200,7 +202,8 @@ def move_player_bullets():
                     aliens.remove(alien)
 
 # Set up the game loop
-while True:
+game_over = False
+while not game_over:
     # Move the player's spaceship
     def move_left():
         x = player.xcor()
@@ -231,7 +234,10 @@ while True:
     for alien in aliens:
         x = alien.xcor()
         x += alien_dx
+        y = alien.ycor()
+        y -= alien_dy
         alien.setx(x)
+        alien.sety(y)
 
         # Reverse the direction and move down when hitting the edge
         if x > 280 or x < -280:
@@ -241,16 +247,10 @@ while True:
             alien.sety(y)
 
             # End the game if the alien ships touch the player's spaceship
-            if alien.ycor() < -250:
-                player.hideturtle()
-                bullet.hideturtle()
-                for alien in aliens:
-                    alien.hideturtle()
-                for barrier in barriers:
-                    barrier.hideturtle()
-                message = turtle.Turtle()
-                message.color("white")
-                message.penup()
+            for alien in aliens:
+                if alien.distance(player) < 20:
+                    game_over = True
+                    break
 
     # Check for collisions between the alien bullets and the player's spaceship
     for bullet in alien_bullets:
